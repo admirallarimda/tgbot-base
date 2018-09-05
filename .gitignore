@@ -10,3 +10,12 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+# actual config which might contain tokens
+bot.cfg
+
+# emacs temporaries
+*~
+
+#tags
+.tags*
