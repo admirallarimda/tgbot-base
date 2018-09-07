@@ -33,7 +33,7 @@ func NewRedisPool(cfg RedisConfig) RedisPool {
     }
 
     keys, err := getAllKeys(conn, "db:*")
-    if err != nil {
+    if err == nil {
         for _, key := range keys {
             dbID, err := conn.Get(key).Int64()
             if err != nil {
