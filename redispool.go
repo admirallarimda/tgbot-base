@@ -1,6 +1,7 @@
 package botbase
 
 import "log"
+import "strings"
 import "github.com/go-redis/redis"
 
 type RedisPool interface {
@@ -39,8 +40,9 @@ func NewRedisPool(cfg RedisConfig) RedisPool {
                 log.Printf("Could not get db ID for key '%s' due to error: %s; skipping", key, err)
                 continue
             }
-            log.Printf("Redis DB '%s' is located at DB id %d", key, dbID)
-            impl.db[key] = int(dbID)
+            dbname := strings.Split(key, ":")[1]
+            log.Printf("Redis DB '%s' is located at DB id %d", dbname, dbID)
+            impl.db[dbname] = int(dbID)
         }
     }
 
