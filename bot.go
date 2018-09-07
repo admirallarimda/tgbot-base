@@ -14,7 +14,7 @@ type Bot struct {
     botChannels struct {
         in_msg_chan tgbotapi.UpdatesChannel
         out_msg_chan chan tgbotapi.MessageConfig
-        service_chan chan serviceMsg
+        service_chan chan ServiceMsg
     }
 }
 
@@ -61,7 +61,7 @@ func NewBot(cfg Config) *Bot {
     }
     b.botChannels.in_msg_chan = updates
     b.botChannels.out_msg_chan = make(chan tgbotapi.MessageConfig, 0)
-    b.botChannels.service_chan = make(chan serviceMsg, 0)
+    b.botChannels.service_chan = make(chan ServiceMsg, 0)
 
     return b
 }
