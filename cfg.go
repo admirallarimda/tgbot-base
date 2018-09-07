@@ -10,10 +10,4 @@ type Config struct {
         User string
         Pass string
     }
-
-    Redis struct {
-        Server string
-        DB int
-        Pass string
-    }
 }

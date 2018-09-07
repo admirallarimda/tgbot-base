@@ -10,7 +10,6 @@ type RedisPool interface {
 
 type RedisConfig struct {
     Server string
-    DB int
     Pass string
 }
 
@@ -40,6 +39,7 @@ func NewRedisPool(cfg RedisConfig) RedisPool {
                 log.Printf("Could not get db ID for key '%s' due to error: %s; skipping", key, err)
                 continue
             }
+            log.Printf("Redis DB '%s' is located at DB id %d", key, dbID)
             impl.db[key] = int(dbID)
         }
     }
