@@ -85,11 +85,11 @@ func (b *Bot) Start() {
         select {
         case update := <-b.botChannels.in_msg_chan:
                 log.Printf("Received an update from tgbotapi")
-                dumpMessage(update)
                 if update.Message == nil {
                     log.Print("Message: empty. Skipping");
                     continue
                 }
+                dumpMessage(update)
                 for _, d := range b.dealers {
                     d.accept(*update.Message)
                 }
