@@ -8,6 +8,11 @@ type RedisPropertyStorage struct {
 	client *redis.Client
 }
 
+func NewRedisPropertyStorage(pool RedisPool) *RedisPropertyStorage {
+	r := &RedisPropertyStorage{client: pool.GetConnByName("property")}
+	return r
+}
+
 func redisPropertyKey(name string, user UserID, chat ChatID) string {
 	return fmt.Sprintf("tg:property:%s:%d:%d", name, user, chat)
 }
