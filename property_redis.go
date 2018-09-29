@@ -35,6 +35,47 @@ func (r *RedisPropertyStorage) SetPropertyForChat(name string, chat ChatID, valu
 
 func (r *RedisPropertyStorage) GetProperty(name string, user UserID, chat ChatID) (string, error) {
 	log.Printf("Getting property '%s' for user %d chat %d", name, user, chat)
+
+	// checking specific property value for this user in this chat
+	res := r.client.Get(redisPropertyKey(name, user, chat))
+	err := res.Err()
+	if err != nil {
+		if err == redis.Nil {
+			log.Printf("No property '%s' for user %d chat %d, checking next", name, user, chat)
+		} else {
+			return "", err
+		}
+	} else {
+		return res.String(), nil
+	}
+
+	// checking user-defined property (for any chat)
+	res = r.client.Get(redisPropertyKey(name, user, 0))
+	err = res.Err()
+	if err != nil {
+		if err == redis.Nil {
+			log.Printf("No property '%s' for user %d, checking next", name, user)
+		} else {
+			return "", err
+		}
+	} else {
+		return res.String(), nil
+	}
+
+	// checking chat-defined property (default property for this chat)
+	res = r.client.Get(redisPropertyKey(name, 0, chat))
+	err = res.Err()
+	if err != nil {
+		if err == redis.Nil {
+			log.Printf("No property '%s' for chat %d", name, chat)
+		} else {
+			return "", err
+		}
+	} else {
+		return res.String(), nil
+	}
+
+	log.Printf("No property '%s' for user %d chat %d, returning null", name, user, chat)
 	return "", nil
 }
 
