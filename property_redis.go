@@ -46,7 +46,7 @@ func (r *RedisPropertyStorage) GetProperty(name string, user UserID, chat ChatID
 			return "", err
 		}
 	} else {
-		return res.String(), nil
+		return res.Val(), nil
 	}
 
 	// checking user-defined property (for any chat)
@@ -59,7 +59,7 @@ func (r *RedisPropertyStorage) GetProperty(name string, user UserID, chat ChatID
 			return "", err
 		}
 	} else {
-		return res.String(), nil
+		return res.Val(), nil
 	}
 
 	// checking chat-defined property (default property for this chat)
@@ -72,7 +72,7 @@ func (r *RedisPropertyStorage) GetProperty(name string, user UserID, chat ChatID
 			return "", err
 		}
 	} else {
-		return res.String(), nil
+		return res.Val(), nil
 	}
 
 	log.Printf("No property '%s' for user %d chat %d, returning null", name, user, chat)
