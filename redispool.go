@@ -59,7 +59,7 @@ func (pool *RedisPoolImpl) GetConnByID(dbID int) *redis.Client {
 func (pool *RedisPoolImpl) GetConnByName(dbName string) *redis.Client {
 	dbID, found := pool.db[dbName]
 	if !found {
-		log.Printf("DB named '%s' not known to the pool", dbName)
+		log.Fatalf("DB named '%s' not known to the pool", dbName)
 		return nil
 	}
 	return pool.GetConnByID(dbID)
