@@ -16,20 +16,33 @@ type MessageDealer interface {
 }
 
 type HandlerTrigger struct {
-	Re  *regexp.Regexp
-	Cmd string
+	re   *regexp.Regexp
+	cmds map[string]bool
+}
+
+func NewHandlerTrigger(re *regexp.Regexp, cmds []string) HandlerTrigger {
+	cmdmap := make(map[string]bool, len(cmds))
+	for _, c := range cmds {
+		cmdmap[c] = true
+	}
+
+	return HandlerTrigger{re: re,
+		cmds: cmdmap}
 }
 
 func (t *HandlerTrigger) canHandle(msg tgbotapi.Message) bool {
-	if t.Re != nil && t.Re.MatchString(msg.Text) {
-		log.Printf("Message text '%s' matched regexp '%s'", msg.Text, t.Re)
+	if t.re != nil && t.re.MatchString(msg.Text) {
+		log.Printf("Message text '%s' matched regexp '%s'", msg.Text, t.re)
 		return true
 	}
-	if msg.IsCommand() && t.Cmd == msg.Command() {
-		log.Printf("Message text '%s' matched command '%s'", msg.Text, t.Cmd)
-		return true
+	if msg.IsCommand() {
+		cmd := msg.Command()
+		if _, found := t.cmds[cmd]; found {
+			log.Printf("Message text '%s' matched command '%s'", msg.Text, cmd)
+			return true
+		}
 	}
-	log.Printf("Message text '%s' doesn't match either command '%s' or regexp '%s'", msg.Text, t.Cmd, t.Re)
+	log.Printf("Message text '%s' doesn't match either commands '%v' or regexp '%s'", msg.Text, t.cmds, t.re)
 	return false
 }
 
