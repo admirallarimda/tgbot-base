@@ -25,7 +25,7 @@ func (r *RedisPropertyStorage) SetPropertyForUserInChat(name string, user UserID
 
 func (r *RedisPropertyStorage) SetPropertyForUser(name string, user UserID, value interface{}) error {
 	log.Printf("Setting property '%s' for user %d with value: %v", name, user, value)
-	return r.SetPropertyForUserInChat(name, user, 0, value)
+	return r.SetPropertyForUserInChat(name, user, ChatID(user), value)
 }
 
 func (r *RedisPropertyStorage) SetPropertyForChat(name string, chat ChatID, value interface{}) error {
@@ -49,8 +49,8 @@ func (r *RedisPropertyStorage) GetProperty(name string, user UserID, chat ChatID
 		return res.Val(), nil
 	}
 
-	// checking user-defined property (for any chat)
-	res = r.client.Get(redisPropertyKey(name, user, 0))
+	// checking user-defined property (for any chat, set via direct msg)
+	res = r.client.Get(redisPropertyKey(name, user, ChatID(user)))
 	err = res.Err()
 	if err != nil {
 		if err == redis.Nil {
