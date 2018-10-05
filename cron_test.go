@@ -45,3 +45,22 @@ func TestCallXTimes(t *testing.T) {
 		t.Fatal(j.count, n)
 	}
 }
+
+func TestDifferentTimesRandom(t *testing.T) {
+	durations := []int{1, 2, 3, 4, 5, 6, 7}
+	rand.Shuffle(len(durations), func(i int, j int) {
+		durations[i], durations[j] = durations[j], durations[i]
+	})
+
+	c := NewCron()
+	j := &testCronCountingJob{}
+	now := time.Now()
+	for i := 0; i < len(durations); i++ {
+		c.AddJob(now.Add(time.Duration(durations[i])*time.Second), j)
+	}
+	time.Sleep(time.Duration(len(durations)+1) * time.Second)
+	atomic.LoadInt32(&j.count)
+	if j.count != int32(len(durations)) {
+		t.Fatal(j.count, len(durations))
+	}
+}

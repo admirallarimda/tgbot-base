@@ -85,23 +85,27 @@ func (c *cron) run() {
 			log.Printf("cron: Received new job for time %s", j.execTime)
 			c.processNewJob(j.execTime, j.job)
 		case now := <-c.timer.C:
-			log.Printf("cron: New trigger tick: %s", now)
+			log.Printf("cron: New trigger tick: %s; registered times: %d", now, len(c.sortedJobTimes))
 			pos := sort.Search(len(c.sortedJobTimes), func(i int) bool {
-				return c.sortedJobTimes[i].Before(now)
+				return now.Before(c.sortedJobTimes[i])
 			})
 			if pos == len(c.sortedJobTimes) {
 				panic("cron: scheduling inconsistency")
 			}
 			// preparing list of jobs which should be executed, removing them from internal structures
 			jobsToExecute := make(map[time.Time][]CronJob, pos+1)
-			for i := 0; i <= pos; i++ {
+			for i := 0; i < pos; i++ {
 				t := c.sortedJobTimes[i]
 				jobsToExecute[t] = c.jobs[t]
 				delete(c.jobs, t)
 			}
-			c.sortedJobTimes = c.sortedJobTimes[pos+1:]
+			c.sortedJobTimes = c.sortedJobTimes[pos:]
+			log.Printf("cron: after preparing jobs for execution: %d times left", len(c.sortedJobTimes))
 			if len(jobsToExecute) == 0 {
 				panic("cron: time-to-jobs inconsistency")
+			}
+			if len(c.jobs) != len(c.sortedJobTimes)-1 { // correction for 'fake' bit value
+				panic("cron: job map and sorted times list size mismatch")
 			}
 			c.executeJobs(jobsToExecute, now)
 			c.resetTimer(now)
@@ -111,13 +115,15 @@ func (c *cron) run() {
 
 // NewCron creates an instance of cron
 func NewCron() Cron {
+	now := time.Now()
 	c := cron{
 		newJobCh:       make(chan cronJobDesc, 0),
 		jobs:           make(map[time.Time][]CronJob, 0),
-		sortedJobTimes: make([]time.Time, 0),
+		sortedJobTimes: []time.Time{now.Add(maxTimerDuration)}, // setting bit value for sort.Search to work correctly
 		timer:          time.NewTimer(maxTimerDuration)}
 
 	go c.run()
+	log.Printf("New cron has started")
 
 	return &c
 }
