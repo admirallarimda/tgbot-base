@@ -3,15 +3,16 @@ package botbase
 import "time"
 import "log"
 import "sort"
+import "math"
 
 // Cron interface declares interfaces for communication with some cron daemon
 type Cron interface {
-	AddJob(t time.Time, job CronJob)
+	AddJob(when time.Time, job CronJob)
 }
 
 // CronJob provides a piece of work which should be done once its time has come
 type CronJob interface {
-	Do(now time.Time, cron Cron)
+	Do(scheduledWhen time.Time, cron Cron)
 }
 
 type cronJobDesc struct {
@@ -27,6 +28,8 @@ type cron struct {
 	sortedJobTimes []time.Time
 }
 
+var maxTimerDuration time.Duration = time.Duration(math.MaxInt64) * time.Nanosecond
+
 func (c *cron) AddJob(t time.Time, job CronJob) {
 	c.newJobCh <- cronJobDesc{
 		execTime: t,
@@ -35,7 +38,7 @@ func (c *cron) AddJob(t time.Time, job CronJob) {
 
 func (c *cron) executeJobs(jobsToExecute map[time.Time][]CronJob, now time.Time) {
 	for scheduledTime, jobs := range jobsToExecute {
-		log.Printf("Executing %d jobs at time %s (scheduled %s; diff %s)", len(jobsToExecute), now, scheduledTime, now.Sub(scheduledTime))
+		log.Printf("cron: Executing %d jobs at time %s (scheduled %s; diff %s)", len(jobs), now, scheduledTime, now.Sub(scheduledTime))
 		for _, j := range jobs {
 			go j.Do(scheduledTime, c)
 		}
@@ -44,10 +47,10 @@ func (c *cron) executeJobs(jobsToExecute map[time.Time][]CronJob, now time.Time)
 
 func (c *cron) processNewJob(execTime time.Time, job CronJob) {
 	if _, found := c.jobs[execTime]; found {
-		log.Printf("New job with known time %s has arrived", execTime)
+		log.Printf("cron: New job with known time %s has arrived", execTime)
 		c.jobs[execTime] = append(c.jobs[execTime], job)
 	} else {
-		log.Printf("New job with not yet known time %s has arrived", execTime)
+		log.Printf("cron: New job with not yet known time %s has arrived", execTime)
 		c.jobs[execTime] = []CronJob{job}
 		c.sortedJobTimes = append(c.sortedJobTimes, execTime)
 		sort.Slice(c.sortedJobTimes, func(i int, j int) bool {
@@ -58,9 +61,18 @@ func (c *cron) processNewJob(execTime time.Time, job CronJob) {
 }
 
 func (c *cron) resetTimer(now time.Time) {
-	nextTimer := c.sortedJobTimes[0].Sub(now)
+	log.Printf("cron: timer is going to be reset")
+	nextTimer := maxTimerDuration
+	if len(c.sortedJobTimes) > 0 {
+		nextTimer = c.sortedJobTimes[0].Sub(now)
+	}
+
+	log.Printf("cron: Timer will be reset to %s (now %s + duration %s)", now.Add(nextTimer), now, nextTimer)
 	if !c.timer.Stop() {
-		<-c.timer.C
+		select {
+		case <-c.timer.C:
+		default:
+		}
 	}
 	c.timer.Reset(nextTimer)
 }
@@ -70,13 +82,15 @@ func (c *cron) run() {
 	for isRunning {
 		select {
 		case j := <-c.newJobCh:
+			log.Printf("cron: Received new job for time %s", j.execTime)
 			c.processNewJob(j.execTime, j.job)
 		case now := <-c.timer.C:
+			log.Printf("cron: New trigger tick: %s", now)
 			pos := sort.Search(len(c.sortedJobTimes), func(i int) bool {
 				return c.sortedJobTimes[i].Before(now)
 			})
 			if pos == len(c.sortedJobTimes) {
-				panic("cron scheduling inconsistency")
+				panic("cron: scheduling inconsistency")
 			}
 			// preparing list of jobs which should be executed, removing them from internal structures
 			jobsToExecute := make(map[time.Time][]CronJob, pos+1)
@@ -87,7 +101,7 @@ func (c *cron) run() {
 			}
 			c.sortedJobTimes = c.sortedJobTimes[pos+1:]
 			if len(jobsToExecute) == 0 {
-				panic("cron time-to-jobs inconsistency")
+				panic("cron: time-to-jobs inconsistency")
 			}
 			c.executeJobs(jobsToExecute, now)
 			c.resetTimer(now)
@@ -100,7 +114,8 @@ func NewCron() Cron {
 	c := cron{
 		newJobCh:       make(chan cronJobDesc, 0),
 		jobs:           make(map[time.Time][]CronJob, 0),
-		sortedJobTimes: make([]time.Time, 0)}
+		sortedJobTimes: make([]time.Time, 0),
+		timer:          time.NewTimer(maxTimerDuration)}
 
 	go c.run()
 
