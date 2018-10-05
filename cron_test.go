@@ -64,3 +64,35 @@ func TestDifferentTimesRandom(t *testing.T) {
 		t.Fatal(j.count, len(durations))
 	}
 }
+
+func TestDifferentTimesAsc(t *testing.T) {
+	durations := []int{1, 2, 3, 4, 5, 6, 7}
+
+	c := NewCron()
+	j := &testCronCountingJob{}
+	now := time.Now()
+	for i := 0; i < len(durations); i++ {
+		c.AddJob(now.Add(time.Duration(durations[i])*time.Second), j)
+	}
+	time.Sleep(time.Duration(len(durations)+1) * time.Second)
+	atomic.LoadInt32(&j.count)
+	if j.count != int32(len(durations)) {
+		t.Fatal(j.count, len(durations))
+	}
+}
+
+func TestDifferentTiDescAsc(t *testing.T) {
+	durations := []int{7, 6, 5, 4, 3, 2, 1}
+
+	c := NewCron()
+	j := &testCronCountingJob{}
+	now := time.Now()
+	for i := 0; i < len(durations); i++ {
+		c.AddJob(now.Add(time.Duration(durations[i])*time.Second), j)
+	}
+	time.Sleep(time.Duration(len(durations)+1) * time.Second)
+	atomic.LoadInt32(&j.count)
+	if j.count != int32(len(durations)) {
+		t.Fatal(j.count, len(durations))
+	}
+}
