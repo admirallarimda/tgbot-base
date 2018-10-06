@@ -32,7 +32,7 @@ func NewRedisPool(cfg RedisConfig) RedisPool {
 		log.Panicf("Could not connect to Redis using configuration: %+v", cfg)
 	}
 
-	keys, err := getAllKeys(conn, "db:*")
+	keys, err := GetAllKeys(conn, "db:*")
 	if err == nil {
 		for _, key := range keys {
 			dbID, err := conn.Get(key).Int64()
@@ -65,7 +65,7 @@ func (pool *RedisPoolImpl) GetConnByName(dbName string) *redis.Client {
 	return pool.GetConnByID(dbID)
 }
 
-func getAllKeys(conn *redis.Client, matchPattern string) ([]string, error) {
+func GetAllKeys(conn *redis.Client, matchPattern string) ([]string, error) {
 	log.Printf("Starting scanning for match '%s'", matchPattern)
 	result := make([]string, 0)
 	var cursor uint64 = 0
