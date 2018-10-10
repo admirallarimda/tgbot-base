@@ -1,4 +1,4 @@
-package botbase
+package tgbotbase
 
 import "log"
 import "gopkg.in/telegram-bot-api.v4"

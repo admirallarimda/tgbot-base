@@ -1,4 +1,4 @@
-package botbase
+package tgbotbase
 
 type Config struct {
 	TGBot struct {

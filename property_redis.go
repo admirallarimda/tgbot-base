@@ -1,4 +1,4 @@
-package botbase
+package tgbotbase
 
 import "log"
 import "fmt"

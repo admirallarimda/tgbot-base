@@ -1,4 +1,4 @@
-package botbase
+package tgbotbase
 
 type PropertyStorage interface {
 	GetProperty(name string, user UserID, chat ChatID) (string, error)
