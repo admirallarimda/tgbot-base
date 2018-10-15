@@ -3,6 +3,7 @@ package tgbotbase
 import "gopkg.in/telegram-bot-api.v4"
 import "regexp"
 import "log"
+import "strings"
 
 type ServiceMsg struct {
 	stopBot bool
@@ -31,7 +32,8 @@ func NewHandlerTrigger(re *regexp.Regexp, cmds []string) HandlerTrigger {
 }
 
 func (t *HandlerTrigger) canHandle(msg tgbotapi.Message) bool {
-	if t.re != nil && t.re.MatchString(msg.Text) {
+    text := strings.ToLower(msg.Text)
+	if t.re != nil && t.re.MatchString(text) {
 		log.Printf("Message text '%s' matched regexp '%s'", msg.Text, t.re)
 		return true
 	}
