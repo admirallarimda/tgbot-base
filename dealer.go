@@ -91,18 +91,32 @@ type BaseHandler struct {
 	SrvCh    chan<- ServiceMsg
 }
 
+type BackgroundMessageHandler interface {
+	Init(chan<- tgbotapi.MessageConfig, chan<- ServiceMsg)
+	Run()
+	Name() string
+}
+
 type BackgroundMessageDealer struct {
-	MessageDealer
-	BaseHandler
+	h BackgroundMessageHandler
+}
+
+func NewBackgroundMessageDealer(h BackgroundMessageHandler) MessageDealer {
+	return &BackgroundMessageDealer{h: h}
 }
 
 func (d *BackgroundMessageDealer) init(outMsgCh chan<- tgbotapi.MessageConfig, srvCh chan<- ServiceMsg) {
-	d.OutMsgCh = outMsgCh
-	d.SrvCh = srvCh
+	d.h.Init(outMsgCh, srvCh)
 }
 
 func (d *BackgroundMessageDealer) accept(tgbotapi.Message) {
 	// doing nothing
 }
 
-// MessageDealer::run to be overwritten by concrete implementations
+func (d *BackgroundMessageDealer) run() {
+	d.h.Run()
+}
+
+func (d *BackgroundMessageDealer) name() string {
+	return d.h.Name()
+}
