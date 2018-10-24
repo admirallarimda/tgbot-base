@@ -127,3 +127,12 @@ func NewCron() Cron {
 
 	return &c
 }
+
+func CalcNextTimeFromMidnight(now time.Time, fromMidnight time.Duration) time.Time {
+	midnight := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	nextTime := midnight.Add(fromMidnight)
+	if nextTime.Before(now) {
+		nextTime = nextTime.Add(24 * time.Hour)
+	}
+	return nextTime
+}
