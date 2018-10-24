@@ -2,6 +2,8 @@ package tgbotbase
 
 import "log"
 import "fmt"
+import "strings"
+import "strconv"
 import "github.com/go-redis/redis"
 
 type RedisPropertyStorage struct {
@@ -77,6 +79,49 @@ func (r *RedisPropertyStorage) GetProperty(name string, user UserID, chat ChatID
 
 	log.Printf("No property '%s' for user %d chat %d, returning null", name, user, chat)
 	return "", nil
+}
+
+func (r *RedisPropertyStorage) GetEveryHavingProperty(name string) ([]PropertyValue, error) {
+	log.Printf("Getting property '%s' for every chat", name)
+	pattern := fmt.Sprintf("tg:property:%s:*:*", name)
+	keys, err := GetAllKeys(r.client, pattern)
+	if err != nil {
+		return nil, err
+	}
+	props := make([]PropertyValue, 0, len(keys))
+	for _, k := range keys {
+		value, err := r.client.Get(k).Result()
+		if err != nil {
+			log.Printf("Property by key '%s' could not be retrieved due to error: %s", k, err)
+			continue
+		}
+
+		parts := strings.Split(k, ":")
+		if len(parts) != 5 {
+			log.Printf("Key '%s' has unexpected number of parts", k)
+			continue
+		}
+		userStr := parts[3]
+		userID, err := strconv.Atoi(userStr)
+		if err != nil {
+			log.Printf("Could not convert user '%s' to integer due to error: %s", userStr, err)
+			continue
+		}
+
+		chatStr := parts[4]
+		chatID, err := strconv.Atoi(chatStr)
+		if err != nil {
+			log.Printf("Could not convert chat '%s' to integer due to error: %s", chatStr, err)
+			continue
+		}
+
+		props = append(props, PropertyValue{
+			User:  UserID(userID),
+			Chat:  ChatID(chatID),
+			Value: value})
+	}
+
+	return props, nil
 }
 
 var _ PropertyStorage = &RedisPropertyStorage{}
