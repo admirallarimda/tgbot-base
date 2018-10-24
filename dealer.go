@@ -10,7 +10,7 @@ type ServiceMsg struct {
 }
 
 type MessageDealer interface {
-	init(chan<- tgbotapi.MessageConfig, chan<- ServiceMsg)
+	init(chan<- tgbotapi.Chattable, chan<- ServiceMsg)
 	accept(tgbotapi.Message)
 	run()
 	name() string
@@ -32,7 +32,7 @@ func NewHandlerTrigger(re *regexp.Regexp, cmds []string) HandlerTrigger {
 }
 
 func (t *HandlerTrigger) canHandle(msg tgbotapi.Message) bool {
-    text := strings.ToLower(msg.Text)
+	text := strings.ToLower(msg.Text)
 	if t.re != nil && t.re.MatchString(text) {
 		log.Printf("Message text '%s' matched regexp '%s'", msg.Text, t.re)
 		return true
@@ -49,7 +49,7 @@ func (t *HandlerTrigger) canHandle(msg tgbotapi.Message) bool {
 }
 
 type IncomingMessageHandler interface {
-	Init(chan<- tgbotapi.MessageConfig, chan<- ServiceMsg) HandlerTrigger
+	Init(chan<- tgbotapi.Chattable, chan<- ServiceMsg) HandlerTrigger
 	HandleOne(tgbotapi.Message)
 	Name() string
 }
@@ -65,7 +65,7 @@ func NewIncomingMessageDealer(h IncomingMessageHandler) *IncomingMessageDealer {
 	return d
 }
 
-func (d *IncomingMessageDealer) init(outMsgCh chan<- tgbotapi.MessageConfig, srvCh chan<- ServiceMsg) {
+func (d *IncomingMessageDealer) init(outMsgCh chan<- tgbotapi.Chattable, srvCh chan<- ServiceMsg) {
 	d.trigger = d.handler.Init(outMsgCh, srvCh)
 	d.inMsgCh = make(chan tgbotapi.Message, 0)
 }
@@ -89,12 +89,12 @@ func (d *IncomingMessageDealer) name() string {
 }
 
 type BaseHandler struct {
-	OutMsgCh chan<- tgbotapi.MessageConfig
+	OutMsgCh chan<- tgbotapi.Chattable
 	SrvCh    chan<- ServiceMsg
 }
 
 type BackgroundMessageHandler interface {
-	Init(chan<- tgbotapi.MessageConfig, chan<- ServiceMsg)
+	Init(chan<- tgbotapi.Chattable, chan<- ServiceMsg)
 	Run()
 	Name() string
 }
@@ -107,7 +107,7 @@ func NewBackgroundMessageDealer(h BackgroundMessageHandler) MessageDealer {
 	return &BackgroundMessageDealer{h: h}
 }
 
-func (d *BackgroundMessageDealer) init(outMsgCh chan<- tgbotapi.MessageConfig, srvCh chan<- ServiceMsg) {
+func (d *BackgroundMessageDealer) init(outMsgCh chan<- tgbotapi.Chattable, srvCh chan<- ServiceMsg) {
 	d.h.Init(outMsgCh, srvCh)
 }
 

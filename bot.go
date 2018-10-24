@@ -13,7 +13,7 @@ type Bot struct {
 	bot         *tgbotapi.BotAPI
 	botChannels struct {
 		in_msg_chan  tgbotapi.UpdatesChannel
-		out_msg_chan chan tgbotapi.MessageConfig
+		out_msg_chan chan tgbotapi.Chattable
 		service_chan chan ServiceMsg
 	}
 }
@@ -60,7 +60,7 @@ func NewBot(cfg Config) *Bot {
 		log.Panic(err)
 	}
 	b.botChannels.in_msg_chan = updates
-	b.botChannels.out_msg_chan = make(chan tgbotapi.MessageConfig, 0)
+	b.botChannels.out_msg_chan = make(chan tgbotapi.Chattable, 0)
 	b.botChannels.service_chan = make(chan ServiceMsg, 0)
 
 	return b
@@ -108,7 +108,7 @@ func (b *Bot) serveReplies() {
 	log.Print("Started serving replies")
 	msg, notClosed := <-b.botChannels.out_msg_chan
 	for ; notClosed; msg, notClosed = <-b.botChannels.out_msg_chan {
-		log.Printf("Received reply to chat %d", msg.ChatID)
+		log.Printf("Will send a reply")
 		_, err := b.bot.Send(msg)
 		if err != nil {
 			log.Printf("Could not sent reply %+v due to error: %s", msg, err)
