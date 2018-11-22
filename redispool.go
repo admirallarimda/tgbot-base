@@ -65,6 +65,7 @@ func (pool *RedisPoolImpl) GetConnByName(dbName string) *redis.Client {
 	return pool.GetConnByID(dbID)
 }
 
+// GetAllKeys returns unique slice of keys matching the pattern
 func GetAllKeys(conn *redis.Client, matchPattern string) ([]string, error) {
 	log.Printf("Starting scanning for match '%s'", matchPattern)
 	result := make([]string, 0)

@@ -104,6 +104,10 @@ func (b *Bot) Start() {
 	log.Print("Main cycle has been aborted")
 }
 
+func (b *Bot) Send(msg tgbotapi.Chattable) {
+	b.botChannels.out_msg_chan <- msg
+}
+
 func (b *Bot) serveReplies() {
 	log.Print("Started serving replies")
 	msg, notClosed := <-b.botChannels.out_msg_chan
