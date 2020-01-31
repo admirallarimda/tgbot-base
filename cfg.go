@@ -2,7 +2,8 @@ package tgbotbase
 
 type Config struct {
 	TGBot struct {
-		Token string
+		Token       string
+		SkipConnect bool
 	}
 
 	Proxy_SOCKS5 struct {

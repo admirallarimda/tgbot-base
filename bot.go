@@ -1,10 +1,13 @@
 package tgbotbase
 
-import "log"
-import "gopkg.in/telegram-bot-api.v4"
-import "golang.org/x/net/proxy"
-import "net/http"
-import "time"
+import (
+	"log"
+	"net/http"
+	"time"
+
+	"golang.org/x/net/proxy"
+	tgbotapi "gopkg.in/telegram-bot-api.v4"
+)
 
 type Bot struct {
 	dealers []MessageDealer
@@ -24,6 +27,13 @@ func NewBot(cfg Config) *Bot {
 
 	botToken := cfg.TGBot.Token
 	log.Printf("Setting up a bot with token: %s", botToken)
+
+	b.botChannels.out_msg_chan = make(chan tgbotapi.Chattable, 0)
+	b.botChannels.service_chan = make(chan ServiceMsg, 0)
+
+	if cfg.TGBot.SkipConnect {
+		return b
+	}
 
 	// connecting to Telegram
 	if cfg.Proxy_SOCKS5.Server != "" {
@@ -60,8 +70,6 @@ func NewBot(cfg Config) *Bot {
 		log.Panic(err)
 	}
 	b.botChannels.in_msg_chan = updates
-	b.botChannels.out_msg_chan = make(chan tgbotapi.Chattable, 0)
-	b.botChannels.service_chan = make(chan ServiceMsg, 0)
 
 	return b
 }
