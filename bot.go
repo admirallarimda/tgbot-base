@@ -97,7 +97,9 @@ func (b *Bot) Start() {
 				log.Print("Message: empty. Skipping")
 				continue
 			}
-			dumpMessage(update)
+			if b.cfg.TGBot.Verbose {
+				dumpMessage(update)
+			}
 			for _, d := range b.dealers {
 				d.accept(*update.Message)
 			}
