@@ -1,10 +1,13 @@
 package tgbotbase
 
-import "log"
-import "fmt"
-import "strings"
-import "strconv"
-import "github.com/go-redis/redis"
+import (
+	"fmt"
+	"log"
+	"strconv"
+	"strings"
+
+	"github.com/go-redis/redis"
+)
 
 type RedisPropertyStorage struct {
 	client *redis.Client
@@ -16,6 +19,9 @@ func NewRedisPropertyStorage(pool RedisPool) *RedisPropertyStorage {
 }
 
 func redisPropertyKey(name string, user UserID, chat ChatID) string {
+	if strings.Contains(name, ":") {
+		panic(fmt.Sprintf("Property key %q contains forbidden symbol %q", name, ":"))
+	}
 	return fmt.Sprintf("tg:property:%s:%d:%d", name, user, chat)
 }
 
