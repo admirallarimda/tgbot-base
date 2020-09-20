@@ -9,6 +9,15 @@ import (
 	tgbotapi "gopkg.in/telegram-bot-api.v4"
 )
 
+var botUserName string
+
+func thisBotUserName() string {
+	if botUserName == "" {
+		panic("bot username not yet initialized")
+	}
+	return botUserName
+}
+
 type Bot struct {
 	dealers []MessageDealer
 	cfg     Config
@@ -60,7 +69,8 @@ func NewBot(cfg Config) *Bot {
 		}
 	}
 
-	log.Printf("Authorized on account %s", b.bot.Self.UserName)
+	botUserName := b.bot.Self.UserName
+	log.Printf("Authorized on account %s", botUserName)
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60

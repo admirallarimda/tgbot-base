@@ -1,9 +1,12 @@
 package tgbotbase
 
-import "gopkg.in/telegram-bot-api.v4"
-import "regexp"
-import "log"
-import "strings"
+import (
+	"log"
+	"regexp"
+	"strings"
+
+	tgbotapi "gopkg.in/telegram-bot-api.v4"
+)
 
 type ServiceMsg struct {
 	stopBot bool
@@ -120,5 +123,38 @@ func (d *BackgroundMessageDealer) run() {
 }
 
 func (d *BackgroundMessageDealer) name() string {
+	return d.h.Name()
+}
+
+type EngagementHandler interface {
+	Name() string
+	Engaged(chat *tgbotapi.Chat, user *tgbotapi.User)
+	Disengaged(chat *tgbotapi.Chat, user *tgbotapi.User)
+}
+
+type EngagementMessageDealer struct {
+	h EngagementHandler
+}
+
+func (d *EngagementMessageDealer) init(outMsgCh chan<- tgbotapi.Chattable, srvCh chan<- ServiceMsg) {
+
+}
+
+func (d *EngagementMessageDealer) accept(msg tgbotapi.Message) {
+	for _, m := range *msg.NewChatMembers {
+		if m.IsBot && m.UserName == thisBotUserName() {
+			d.h.Engaged(msg.Chat, msg.From)
+		}
+	}
+	if msg.LeftChatMember.UserName == thisBotUserName() {
+		d.h.Disengaged(msg.Chat, msg.From)
+	}
+}
+
+func (d *EngagementMessageDealer) run() {
+
+}
+
+func (d *EngagementMessageDealer) name() string {
 	return d.h.Name()
 }
