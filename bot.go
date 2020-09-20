@@ -69,7 +69,7 @@ func NewBot(cfg Config) *Bot {
 		}
 	}
 
-	botUserName := b.bot.Self.UserName
+	botUserName = b.bot.Self.UserName
 	log.Printf("Authorized on account %s", botUserName)
 
 	u := tgbotapi.NewUpdate(0)
