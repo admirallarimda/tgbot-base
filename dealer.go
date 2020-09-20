@@ -145,13 +145,17 @@ func (d *EngagementMessageDealer) init(outMsgCh chan<- tgbotapi.Chattable, srvCh
 }
 
 func (d *EngagementMessageDealer) accept(msg tgbotapi.Message) {
-	for _, m := range *msg.NewChatMembers {
-		if m.IsBot && m.UserName == thisBotUserName() {
-			d.h.Engaged(msg.Chat, msg.From)
+	if msg.NewChatMembers != nil {
+		for _, m := range *msg.NewChatMembers {
+			if m.IsBot && m.UserName == thisBotUserName() {
+				d.h.Engaged(msg.Chat, msg.From)
+			}
 		}
 	}
-	if msg.LeftChatMember.UserName == thisBotUserName() {
-		d.h.Disengaged(msg.Chat, msg.From)
+	if msg.LeftChatMember != nil {
+		if msg.LeftChatMember.UserName == thisBotUserName() {
+			d.h.Disengaged(msg.Chat, msg.From)
+		}
 	}
 }
 
