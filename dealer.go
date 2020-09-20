@@ -136,6 +136,10 @@ type EngagementMessageDealer struct {
 	h EngagementHandler
 }
 
+func NewEngagementMessageDealer(h EngagementHandler) MessageDealer {
+	return &EngagementMessageDealer{h: h}
+}
+
 func (d *EngagementMessageDealer) init(outMsgCh chan<- tgbotapi.Chattable, srvCh chan<- ServiceMsg) {
 
 }
