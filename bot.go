@@ -103,13 +103,14 @@ func (b *Bot) Start() {
 		select {
 		case update := <-b.botChannels.in_msg_chan:
 			log.Printf("Received an update from tgbotapi")
+			if b.cfg.TGBot.Verbose {
+				dumpUpdate(update)
+			}
 			if update.Message == nil {
 				log.Print("Message: empty. Skipping")
 				continue
 			}
-			if b.cfg.TGBot.Verbose {
-				dumpMessage(update)
-			}
+
 			for _, d := range b.dealers {
 				d.accept(*update.Message)
 			}
@@ -142,10 +143,12 @@ func (b *Bot) serveReplies() {
 	log.Print("Finished serving replies")
 }
 
-func dumpMessage(update tgbotapi.Update) {
-	log.Printf("Message from: %s; Text: %s", update.Message.From.UserName, update.Message.Text)
+func dumpUpdate(update tgbotapi.Update) {
 	log.Printf("Update: %+v", update)
-	log.Printf("Message: %+v", update.Message)
-	log.Printf("Message.Chat: %+v", update.Message.Chat)
-	log.Printf("Message.NewChatMembers: %+v", update.Message.NewChatMembers)
+	if update.Message != nil {
+		log.Printf("Message from: %s; Text: %s", update.Message.From.UserName, update.Message.Text)
+		log.Printf("Message: %+v", update.Message)
+		log.Printf("Message.Chat: %+v", update.Message.Chat)
+		log.Printf("Message.NewChatMembers: %+v", update.Message.NewChatMembers)
+	}
 }
